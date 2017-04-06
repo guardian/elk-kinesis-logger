@@ -2,13 +2,14 @@
   "name": "elk-kinesis-logger",
   "version": "0.0.0",
   "description": "Logging to a Kinesis stream for consumption into an ELK cluster",
-  "main": "dist/logger.js",
+  "main": "dist/elk-kinesis-logger.js",
   "scripts": {
-    "lint": "eslint src test example",
+    "lint": "eslint src test examples",
     "mocha-test": "mocha",
     "test": "npm run lint && npm run mocha-test",
     "build": "babel src --out-dir dist",
-    "format": "prettier-eslint \"+(src|example|test)/**/*.js\" --write"
+    "format": "prettier-eslint \"+(src|examples|test)/**/*.js\" --write",
+    "prepublish": "npm test && npm run build"
   },
   "author": "The Guardian",
   "license": "ISC",
