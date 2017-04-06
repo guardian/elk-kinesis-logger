@@ -1,65 +1,76 @@
 const AWS = require('aws-sdk');
 
 class ELKKinesisLogger {
-  constructor(
-    {stage, stack, app, roleArn, streamName, sendLogsToKinesis = true}
-  ) {
+  constructor({stage, stack, app, roleArn, streamName}) {
     this.stage = stage;
     this.stack = stack;
     this.app = app;
     this.roleArn = roleArn;
     this.streamName = streamName;
-    this.sendLogsToKinesis = sendLogsToKinesis;
-    this._logLines = [];
+  }
+
+  get _name() {
+    return this.constructor.name;
   }
 
   open() {
     return new Promise((resolve, reject) => {
-      if (!this.sendLogsToKinesis) {
-        resolve(this);
-      } else {
-        const sts = new AWS.STS();
+      const sts = new AWS.STS();
 
-        const roleRequest = sts.assumeRole({
-          RoleArn: this.roleArn,
-          RoleSessionName: this.app
-        });
+      const roleRequest = sts.assumeRole({
+        RoleArn: this.roleArn,
+        RoleSessionName: this.app
+      });
 
-        roleRequest.send((err, data) => {
-          if (err) {
-            reject(err);
-          } else {
-            this.kinesis = new AWS.Kinesis({
-              accessKeyId: data.Credentials.AccessKeyId,
-              secretAccessKey: data.Credentials.SecretAccessKey,
-              sessionToken: data.Credentials.SessionToken
-            });
+      roleRequest.send((err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          this.kinesis = new AWS.Kinesis({
+            accessKeyId: data.Credentials.AccessKeyId,
+            secretAccessKey: data.Credentials.SecretAccessKey,
+            sessionToken: data.Credentials.SessionToken
+          });
 
-            resolve(this);
-          }
-        });
-      }
+          this._logLines = [];
+
+          resolve(this);
+        }
+      });
     });
   }
 
   close() {
-    // eslint-disable-next-line no-console
-    console.log(`Ensuring ${this._logLines.length} log lines are written`);
-
+    this._consoleLog(`ensuring ${this._logLines.length} log lines are written`);
     return Promise.all(this._logLines);
   }
 
-  log(message, extraDetail = {}) {
+  log(message, extraDetail) {
+    this._ensureOpened();
     this._logLines.push(this._putRecord({level: 'INFO', message, extraDetail}));
   }
 
-  error(message, extraDetail = {}) {
+  error(message, extraDetail) {
+    this._ensureOpened();
     this._logLines.push(
       this._putRecord({level: 'ERROR', message, extraDetail})
     );
   }
 
-  _putRecord({level, message, extraDetail}) {
+  _ensureOpened() {
+    if (!this._logLines) {
+      throw `${this._name} has not been opened. Be sure to call .open() first.`;
+    }
+  }
+
+  _consoleLog(message) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `${new Date().toISOString()} [INFO] from ${this._name} - ${message}`
+    );
+  }
+
+  _putRecord({level, message, extraDetail = {}}) {
     return new Promise((resolve, reject) => {
       const coreLogMessage = {
         stack: this.stack,
@@ -75,26 +86,21 @@ class ELKKinesisLogger {
         extraDetail
       );
 
-      // eslint-disable-next-line no-console
-      console.log(`writing to kinesis: ${JSON.stringify(fullMsg)}`);
+      this._consoleLog(`writing to kinesis: ${JSON.stringify(fullMsg)}`);
 
-      if (!this.sendLogsToKinesis) {
-        resolve(fullMsg);
-      } else {
-        const putRecordsRequest = this.kinesis.putRecord({
-          StreamName: this.streamName,
-          PartitionKey: 'logs',
-          Data: JSON.stringify(fullMsg)
-        });
+      const putRecordsRequest = this.kinesis.putRecord({
+        StreamName: this.streamName,
+        PartitionKey: 'logs',
+        Data: JSON.stringify(fullMsg)
+      });
 
-        putRecordsRequest.send(err => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(fullMsg);
-          }
-        });
-      }
+      putRecordsRequest.send(err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(fullMsg);
+        }
+      });
     });
   }
 }
