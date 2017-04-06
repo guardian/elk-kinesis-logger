@@ -1,13 +1,8 @@
 const AWS = require('aws-sdk');
 
 class Logger {
-    constructor({stage, stack, app, roleArn, streamName, sendLogsToKinesis = true}) {
-        this.stage = stage;
-        this.stack = stack;
-        this.app = app;
-        this.roleArn = roleArn;
-        this.streamName = streamName;
-        this.sendLogsToKinesis = sendLogsToKinesis;
+    constructor(options) {
+        Object.assign(this, { sendLogsToKinesis: true }, options)
         this._logLines = [];
     }
 
