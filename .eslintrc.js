@@ -16,6 +16,7 @@ module.exports = {
     },
     "rules": {
         "prefer-const": "error",
-        "semi": ["error", "always"]
+        "semi": ["error", "always"],
+        "comma-dangle": ["error", "never"]
     }
 };

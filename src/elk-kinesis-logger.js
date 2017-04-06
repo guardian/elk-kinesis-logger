@@ -1,8 +1,8 @@
 const AWS = require('aws-sdk');
 
-class Logger {
+class ELKKinesisLogger {
   constructor(
-    {stage, stack, app, roleArn, streamName, sendLogsToKinesis = true},
+    {stage, stack, app, roleArn, streamName, sendLogsToKinesis = true}
   ) {
     this.stage = stage;
     this.stack = stack;
@@ -22,7 +22,7 @@ class Logger {
 
         const roleRequest = sts.assumeRole({
           RoleArn: this.roleArn,
-          RoleSessionName: this.app,
+          RoleSessionName: this.app
         });
 
         roleRequest.send((err, data) => {
@@ -32,7 +32,7 @@ class Logger {
             this.kinesis = new AWS.Kinesis({
               accessKeyId: data.Credentials.AccessKeyId,
               secretAccessKey: data.Credentials.SecretAccessKey,
-              sessionToken: data.Credentials.SessionToken,
+              sessionToken: data.Credentials.SessionToken
             });
 
             resolve(this);
@@ -49,51 +49,49 @@ class Logger {
     return Promise.all(this._logLines);
   }
 
-  log(message, extraDetail) {
+  log(message, extraDetail = {}) {
     this._logLines.push(this._putRecord({level: 'INFO', message, extraDetail}));
   }
 
-  error(message, extraDetail) {
+  error(message, extraDetail = {}) {
     this._logLines.push(
-      this._putRecord({level: 'ERROR', message, extraDetail}),
+      this._putRecord({level: 'ERROR', message, extraDetail})
     );
   }
 
-  _putRecord({level, message, extraDetail = {}}) {
+  _putRecord({level, message, extraDetail}) {
     return new Promise((resolve, reject) => {
       const coreLogMessage = {
         stack: this.stack,
         stage: this.stage,
         app: this.app,
-        timestamp: new Date(),
+        timestamp: new Date()
       };
 
-      const fullLogMessage = Object.assign(
+      const fullMsg = Object.assign(
         {},
         coreLogMessage,
         {level, message},
-        extraDetail,
+        extraDetail
       );
 
       // eslint-disable-next-line no-console
-      console.log(
-        `${fullLogMessage.timestamp} ${fullLogMessage.level} ${fullLogMessage.message} ${fullLogMessage.extraDetail}`,
-      );
+      console.log(`writing to kinesis: ${JSON.stringify(fullMsg)}`);
 
       if (!this.sendLogsToKinesis) {
-        resolve(fullLogMessage);
+        resolve(fullMsg);
       } else {
         const putRecordsRequest = this.kinesis.putRecord({
           StreamName: this.streamName,
           PartitionKey: 'logs',
-          Data: JSON.stringify(fullLogMessage),
+          Data: JSON.stringify(fullMsg)
         });
 
         putRecordsRequest.send(err => {
           if (err) {
             reject(err);
           } else {
-            resolve(fullLogMessage);
+            resolve(fullMsg);
           }
         });
       }
@@ -101,4 +99,4 @@ class Logger {
   }
 }
 
-module.exports = Logger;
+module.exports = ELKKinesisLogger;
