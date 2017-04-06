@@ -1,11 +1,19 @@
 {
   "name": "elk-kinesis-logger",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Logging to a Kinesis stream for consumption into an ELK cluster",
-  "main": "index.js",
+  "main": "dist/logger.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src --out-dir dist"
   },
   "author": "The Guardian",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-es2015": "^6.24.0"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.38.0"
+  }
 }
