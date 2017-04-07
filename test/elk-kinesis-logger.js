@@ -73,6 +73,14 @@ describe('ELKKinesisLogger', () => {
             }
           ];
 
+          const kinesisMsg = {
+            StreamName: config.streamName,
+            PartitionKey: 'logs',
+            Data: JSON.stringify(expected[0])
+          };
+
+          assert.equal(true, logger.kinesis.putRecord.calledOnce);
+          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
           assert.deepEqual(actual, expected);
           done();
         })
@@ -104,6 +112,15 @@ describe('ELKKinesisLogger', () => {
               foo: 'bar'
             }
           ];
+
+          const kinesisMsg = {
+            StreamName: config.streamName,
+            PartitionKey: 'logs',
+            Data: JSON.stringify(expected[0])
+          };
+
+          assert.equal(true, logger.kinesis.putRecord.calledOnce);
+          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
 
           assert.deepEqual(actual, expected);
           done();
@@ -141,6 +158,23 @@ describe('ELKKinesisLogger', () => {
             }
           ];
 
+          expected
+            .map(ex => {
+              return {
+                StreamName: config.streamName,
+                PartitionKey: 'logs',
+                Data: JSON.stringify(ex)
+              };
+            })
+            .forEach(kinesisMsg => {
+              assert.equal(
+                true,
+                logger.kinesis.putRecord.calledWith(kinesisMsg)
+              );
+            });
+
+          assert.equal(true, logger.kinesis.putRecord.calledTwice);
+
           assert.deepEqual(actual, expected);
           done();
         })
@@ -176,6 +210,23 @@ describe('ELKKinesisLogger', () => {
               message: 'second message'
             }
           ];
+
+          expected
+            .map(ex => {
+              return {
+                StreamName: config.streamName,
+                PartitionKey: 'logs',
+                Data: JSON.stringify(ex)
+              };
+            })
+            .forEach(kinesisMsg => {
+              assert.equal(
+                true,
+                logger.kinesis.putRecord.calledWith(kinesisMsg)
+              );
+            });
+
+          assert.equal(true, logger.kinesis.putRecord.calledTwice);
 
           assert.deepEqual(actual, expected);
           done();
