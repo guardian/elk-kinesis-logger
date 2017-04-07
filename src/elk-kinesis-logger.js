@@ -1,12 +1,13 @@
 const AWS = require('aws-sdk');
 
 class ELKKinesisLogger {
-  constructor({stage, stack, app, roleArn, streamName}) {
+  constructor({stage, stack, app, roleArn, streamName, verbose = true}) {
     this.stage = stage;
     this.stack = stack;
     this.app = app;
     this.roleArn = roleArn;
     this.streamName = streamName;
+    this.verbose = verbose;
   }
 
   get _name() {
@@ -17,12 +18,12 @@ class ELKKinesisLogger {
     return new Promise((resolve, reject) => {
       const sts = new AWS.STS();
 
-      const roleRequest = sts.assumeRole({
+      const options = {
         RoleArn: this.roleArn,
         RoleSessionName: this.app
-      });
+      };
 
-      roleRequest.send((err, data) => {
+      sts.assumeRole(options, (err, data) => {
         if (err) {
           reject(err);
         } else {
@@ -64,10 +65,12 @@ class ELKKinesisLogger {
   }
 
   _consoleLog(message) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `${new Date().toISOString()} [INFO] from ${this._name} - ${message}`
-    );
+    if (this.verbose) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `${new Date().toISOString()} [INFO] from ${this._name} - ${message}`
+      );
+    }
   }
 
   _putRecord({level, message, extraDetail = {}}) {
@@ -88,13 +91,13 @@ class ELKKinesisLogger {
 
       this._consoleLog(`writing to kinesis: ${JSON.stringify(fullMsg)}`);
 
-      const putRecordsRequest = this.kinesis.putRecord({
+      const options = {
         StreamName: this.streamName,
         PartitionKey: 'logs',
         Data: JSON.stringify(fullMsg)
-      });
+      };
 
-      putRecordsRequest.send(err => {
+      this.kinesis.putRecord(options, err => {
         if (err) {
           reject(err);
         } else {
