@@ -53,6 +53,7 @@ class ELKKinesisLogger {
         this._logLines.push(
             this._putRecord({level: 'INFO', message, extraDetail})
         );
+        return this;
     }
 
     error(message, extraDetail) {
@@ -60,6 +61,7 @@ class ELKKinesisLogger {
         this._logLines.push(
             this._putRecord({level: 'ERROR', message, extraDetail})
         );
+        return this;
     }
 
     _ensureOpened() {

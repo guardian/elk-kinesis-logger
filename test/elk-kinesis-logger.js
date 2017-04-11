@@ -142,6 +142,8 @@ describe('ELKKinesisLogger', () => {
             logger.log('first message');
             logger.log('second message');
 
+            logger.log('third message').log('fourth message');
+
             logger
                 .close()
                 .then(actual => {
@@ -161,6 +163,22 @@ describe('ELKKinesisLogger', () => {
                             timestamp: date,
                             level: 'INFO',
                             message: 'second message'
+                        },
+                        {
+                            stack: 'elk-kinesis-logger',
+                            stage: 'TEST',
+                            app: 'elk-kinesis-logger-tests',
+                            timestamp: date,
+                            level: 'INFO',
+                            message: 'third message'
+                        },
+                        {
+                            stack: 'elk-kinesis-logger',
+                            stage: 'TEST',
+                            app: 'elk-kinesis-logger-tests',
+                            timestamp: date,
+                            level: 'INFO',
+                            message: 'fourth message'
                         }
                     ];
 
@@ -179,7 +197,10 @@ describe('ELKKinesisLogger', () => {
                             );
                         });
 
-                    assert.equal(true, logger.kinesis.putRecord.calledTwice);
+                    assert.equal(
+                        true,
+                        logger.kinesis.putRecord.callCount === 4
+                    );
 
                     assert.deepEqual(actual, expected);
                     done();
@@ -194,6 +215,8 @@ describe('ELKKinesisLogger', () => {
         logger.open().then(() => {
             logger.log('first message');
             logger.error('second message');
+
+            logger.log('third message').error('fourth message');
 
             logger
                 .close()
@@ -214,6 +237,22 @@ describe('ELKKinesisLogger', () => {
                             timestamp: date,
                             level: 'ERROR',
                             message: 'second message'
+                        },
+                        {
+                            stack: 'elk-kinesis-logger',
+                            stage: 'TEST',
+                            app: 'elk-kinesis-logger-tests',
+                            timestamp: date,
+                            level: 'INFO',
+                            message: 'third message'
+                        },
+                        {
+                            stack: 'elk-kinesis-logger',
+                            stage: 'TEST',
+                            app: 'elk-kinesis-logger-tests',
+                            timestamp: date,
+                            level: 'ERROR',
+                            message: 'fourth message'
                         }
                     ];
 
@@ -232,7 +271,10 @@ describe('ELKKinesisLogger', () => {
                             );
                         });
 
-                    assert.equal(true, logger.kinesis.putRecord.calledTwice);
+                    assert.equal(
+                        true,
+                        logger.kinesis.putRecord.callCount === 4
+                    );
 
                     assert.deepEqual(actual, expected);
                     done();
