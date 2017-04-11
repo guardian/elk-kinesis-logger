@@ -16,7 +16,9 @@ logger
     logger.log('oh hello there');
 
     // set a custom `app` for this log line to appear under different app in ELK
-    logger.log('something bad happened', {app: 'another-elk-kinesis-logger'});
+    logger.log('something bad happened', {
+      app: 'another-elk-kinesis-logger'
+    });
     return logger.close();
   })
   .then(writtenLogs => {

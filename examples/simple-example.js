@@ -13,7 +13,7 @@ const logger = new ELKKinesisLogger(options);
 logger
   .open()
   .then(() => {
-    logger.log('oh hello there', {foo: 'bar'});
+    logger.log('oh hello there', { foo: 'bar' });
     logger.error('something bad happened');
     return logger.close();
   })
