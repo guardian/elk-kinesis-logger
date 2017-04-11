@@ -1,4 +1,5 @@
 [![CircleCI](https://circleci.com/gh/guardian/elk-kinesis-logger.svg?style=svg)](https://circleci.com/gh/guardian/elk-kinesis-logger)
+[![NPM](https://img.shields.io/npm/v/elk-kinesis-logger.svg)](https://www.npmjs.com/package/elk-kinesis-logger)
 
 # ELK Kinesis Logger
 Send logs to an ELK stack via an AWS Kinesis stream.
