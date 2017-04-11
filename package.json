@@ -1,6 +1,6 @@
 {
   "name": "elk-kinesis-logger",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Logging to a Kinesis stream for consumption into an ELK cluster",
   "main": "dist/elk-kinesis-logger.js",
   "scripts": {
