@@ -1,23 +1,27 @@
 module.exports = {
-    "env": {
-        "es6": true,
-        "node": true,
-        "mocha": true
+    env: {
+        es6: true,
+        node: true,
+        mocha: true
     },
-    "extends": [
-        "eslint:recommended"
-    ],
-    "plugins": [
-        "standard",
-        "promise"
-    ],
-    "parserOptions": {
-        "ecmaVersion": 6,
-        "sourceType": "module"
+    extends: ['eslint:recommended', 'prettier'],
+    plugins: ['standard', 'promise', 'prettier'],
+    parserOptions: {
+        ecmaVersion: 6,
+        sourceType: 'module'
     },
-    "rules": {
-        "prefer-const": "error",
-        "semi": ["error", "always"],
-        "comma-dangle": ["error", "never"]
+    rules: {
+        // prettier settings
+        'prettier/prettier': [
+            'error',
+            {
+                singleQuote: true,
+                bracketSpacing: true,
+                tabWidth: 2
+            }
+        ],
+        'prefer-const': 'error',
+        semi: ['error', 'always'],
+        'comma-dangle': ['error', 'never']
     }
 };

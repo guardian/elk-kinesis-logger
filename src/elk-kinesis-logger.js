@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 
 class ELKKinesisLogger {
-  constructor({stage, stack, app, roleArn, streamName, verbose = true}) {
+  constructor({ stage, stack, app, roleArn, streamName, verbose = true }) {
     this.stage = stage;
     this.stack = stack;
     this.app = app;
@@ -48,14 +48,18 @@ class ELKKinesisLogger {
 
   log(message, extraDetail) {
     this._ensureOpened();
-    this._logLines.push(this._putRecord({level: 'INFO', message, extraDetail}));
+    this._logLines.push(
+      this._putRecord({ level: 'INFO', message, extraDetail })
+    );
+    return this;
   }
 
   error(message, extraDetail) {
     this._ensureOpened();
     this._logLines.push(
-      this._putRecord({level: 'ERROR', message, extraDetail})
+      this._putRecord({ level: 'ERROR', message, extraDetail })
     );
+    return this;
   }
 
   _ensureOpened() {
@@ -73,7 +77,7 @@ class ELKKinesisLogger {
     }
   }
 
-  _putRecord({level, message, extraDetail = {}}) {
+  _putRecord({ level, message, extraDetail = {} }) {
     return new Promise((resolve, reject) => {
       const coreLogMessage = {
         stack: this.stack,
@@ -85,7 +89,7 @@ class ELKKinesisLogger {
       const fullMsg = Object.assign(
         {},
         coreLogMessage,
-        {level, message},
+        { level, message },
         extraDetail
       );
 
