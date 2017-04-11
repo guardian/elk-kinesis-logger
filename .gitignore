@@ -1,2 +1,6 @@
 /dist/
 /node_modules/
+
+# Junk
+*.DS_Store
+.idea/
