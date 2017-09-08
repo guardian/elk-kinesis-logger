@@ -1,5 +1,5 @@
 {
-  "name": "elk-kinesis-logger",
+  "name": "@guardian/elk-kinesis-logger",
   "version": "0.1.0",
   "description": "Logging to a Kinesis stream for consumption into an ELK cluster",
   "main": "dist/elk-kinesis-logger.js",
@@ -30,5 +30,17 @@
   },
   "dependencies": {
     "aws-sdk": "^2.38.0"
-  }
+  },
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardian/elk-kinesis-logger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/guardian/elk-kinesis-logger/issues"
+  },
+  "homepage": "https://github.com/guardian/elk-kinesis-logger#readme"
 }

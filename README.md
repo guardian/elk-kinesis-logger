@@ -16,7 +16,7 @@ Using this module, we can easily get logs into an ELK stack.
 
 ## Installation
 ```bash
-npm install elk-kinesis-logger
+npm install @guardian/elk-kinesis-logger
 ```
 
 ## Usage
