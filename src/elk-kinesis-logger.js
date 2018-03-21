@@ -14,30 +14,36 @@ class ELKKinesisLogger {
     return this.constructor.name;
   }
 
-  open() {
-    return new Promise((resolve, reject) => {
-      const sts = new AWS.STS();
+  _openWithoutRole() {
+    return Promise.resolve(new AWS.Kinesis());
+  }
 
-      const options = {
-        RoleArn: this.roleArn,
-        RoleSessionName: this.app
-      };
+  _openWithRole() {
+    const sts = new AWS.STS();
 
-      sts.assumeRole(options, (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          this.kinesis = new AWS.Kinesis({
-            accessKeyId: data.Credentials.AccessKeyId,
-            secretAccessKey: data.Credentials.SecretAccessKey,
-            sessionToken: data.Credentials.SessionToken
-          });
+    const options = {
+      RoleArn: this.roleArn,
+      RoleSessionName: this.app
+    };
 
-          this._logLines = [];
-
-          resolve(this);
-        }
+    return sts.assumeRole(options).promise().then(data => {
+      return new AWS.Kinesis({
+        accessKeyId: data.Credentials.AccessKeyId,
+        secretAccessKey: data.Credentials.SecretAccessKey,
+        sessionToken: data.Credentials.SessionToken
       });
+    });
+  }
+
+  open() {
+    const openPromise = this.roleArn
+      ? this._openWithRole()
+      : this._openWithoutRole();
+
+    return openPromise.then(kinesis => {
+      this.kinesis = kinesis;
+      this._logLines = [];
+      return this;
     });
   }
 

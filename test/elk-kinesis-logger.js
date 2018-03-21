@@ -4,11 +4,19 @@ const MockDate = require('mockdate');
 const ELKKinesisLogger = require('../src/elk-kinesis-logger');
 
 describe('ELKKinesisLogger', () => {
-  const config = {
+  const configWithRoleArn = {
     stage: 'TEST',
     stack: 'elk-kinesis-logger',
     app: 'elk-kinesis-logger-tests',
     roleArn: 'test-role',
+    streamName: 'test-stream',
+    verbose: false
+  };
+
+  const configWithoutRoleArn = {
+    stage: 'TEST',
+    stack: 'elk-kinesis-logger',
+    app: 'elk-kinesis-logger-tests',
     streamName: 'test-stream',
     verbose: false
   };
@@ -41,7 +49,7 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should raise an error if not opened', () => {
-    const logger = new ELKKinesisLogger(config);
+    const logger = new ELKKinesisLogger(configWithRoleArn);
 
     try {
       logger.log('test');
@@ -53,8 +61,8 @@ describe('ELKKinesisLogger', () => {
     }
   });
 
-  it('should write a simple log to kinesis', done => {
-    const logger = new ELKKinesisLogger(config);
+  it('should write a simple log to kinesis (without role)', done => {
+    const logger = new ELKKinesisLogger(configWithoutRoleArn);
 
     logger.open().then(() => {
       logger.log(logMsg);
@@ -74,7 +82,42 @@ describe('ELKKinesisLogger', () => {
           ];
 
           const kinesisMsg = {
-            StreamName: config.streamName,
+            StreamName: configWithRoleArn.streamName,
+            PartitionKey: 'logs',
+            Data: JSON.stringify(expected[0])
+          };
+
+          assert.equal(true, logger.kinesis.putRecord.calledOnce);
+          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
+          assert.deepEqual(actual, expected);
+          done();
+        })
+        .catch(err => done(new Error(err)));
+    });
+  });
+
+  it('should write a simple log to kinesis (with role)', done => {
+    const logger = new ELKKinesisLogger(configWithRoleArn);
+
+    logger.open().then(() => {
+      logger.log(logMsg);
+
+      logger
+        .close()
+        .then(actual => {
+          const expected = [
+            {
+              stack: 'elk-kinesis-logger',
+              stage: 'TEST',
+              app: 'elk-kinesis-logger-tests',
+              timestamp: date,
+              level: 'INFO',
+              message: logMsg
+            }
+          ];
+
+          const kinesisMsg = {
+            StreamName: configWithRoleArn.streamName,
             PartitionKey: 'logs',
             Data: JSON.stringify(expected[0])
           };
@@ -89,7 +132,7 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should write a log with extra detail to kinesis', done => {
-    const logger = new ELKKinesisLogger(config);
+    const logger = new ELKKinesisLogger(configWithRoleArn);
 
     logger.open().then(() => {
       const extraDetail = {
@@ -114,7 +157,7 @@ describe('ELKKinesisLogger', () => {
           ];
 
           const kinesisMsg = {
-            StreamName: config.streamName,
+            StreamName: configWithRoleArn.streamName,
             PartitionKey: 'logs',
             Data: JSON.stringify(expected[0])
           };
@@ -130,7 +173,7 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should write multiple logs', done => {
-    const logger = new ELKKinesisLogger(config);
+    const logger = new ELKKinesisLogger(configWithRoleArn);
 
     logger.open().then(() => {
       logger.log('first message');
@@ -179,7 +222,7 @@ describe('ELKKinesisLogger', () => {
           expected
             .map(ex => {
               return {
-                StreamName: config.streamName,
+                StreamName: configWithRoleArn.streamName,
                 PartitionKey: 'logs',
                 Data: JSON.stringify(ex)
               };
@@ -201,7 +244,7 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should write logs of multiple levels', done => {
-    const logger = new ELKKinesisLogger(config);
+    const logger = new ELKKinesisLogger(configWithRoleArn);
 
     logger.open().then(() => {
       logger.log('first message');
@@ -250,7 +293,7 @@ describe('ELKKinesisLogger', () => {
           expected
             .map(ex => {
               return {
-                StreamName: config.streamName,
+                StreamName: configWithRoleArn.streamName,
                 PartitionKey: 'logs',
                 Data: JSON.stringify(ex)
               };
