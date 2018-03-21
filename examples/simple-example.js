@@ -4,7 +4,6 @@ const options = {
   stage: process.env.STAGE,
   stack: process.env.STACK,
   app: 'elk-kinesis-logger',
-  roleArn: process.env.ROLE_ARN,
   streamName: process.env.STREAM_NAME
 };
 

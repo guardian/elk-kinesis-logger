@@ -41,9 +41,8 @@ const logger = new ELKKinesisLogger({
   stage: 'PROD',
   stack: 'my-stack',
   app: 'my-app',
-  streamName: 'my-stream',
-  roleArn: 'arn:aws:iam::000000000000:role/my-role'
-});
+  streamName: 'my-stream'
+}).withRole('arn:aws:iam::000000000000:role/my-role');
 ```
 
 Open the logger:
@@ -73,7 +72,6 @@ const logger = new ELKKinesisLogger({
   stage: 'PROD',
   stack: 'my-stack',
   app: 'my-app',
-  roleArn: 'arn:aws:iam::000000000000:role/my-role',
   streamName: 'my-stream'
 });
 

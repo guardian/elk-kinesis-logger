@@ -4,16 +4,7 @@ const MockDate = require('mockdate');
 const ELKKinesisLogger = require('../src/elk-kinesis-logger');
 
 describe('ELKKinesisLogger', () => {
-  const configWithRoleArn = {
-    stage: 'TEST',
-    stack: 'elk-kinesis-logger',
-    app: 'elk-kinesis-logger-tests',
-    roleArn: 'test-role',
-    streamName: 'test-stream',
-    verbose: false
-  };
-
-  const configWithoutRoleArn = {
+  const config = {
     stage: 'TEST',
     stack: 'elk-kinesis-logger',
     app: 'elk-kinesis-logger-tests',
@@ -49,7 +40,7 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should raise an error if not opened', () => {
-    const logger = new ELKKinesisLogger(configWithRoleArn);
+    const logger = new ELKKinesisLogger(config);
 
     try {
       logger.log('test');
@@ -61,8 +52,8 @@ describe('ELKKinesisLogger', () => {
     }
   });
 
-  it('should write a simple log to kinesis (without role)', done => {
-    const logger = new ELKKinesisLogger(configWithoutRoleArn);
+  it('should write a simple log to kinesis (with role)', done => {
+    const logger = new ELKKinesisLogger(config).withRole('test-role');
 
     logger.open().then(() => {
       logger.log(logMsg);
@@ -82,11 +73,12 @@ describe('ELKKinesisLogger', () => {
           ];
 
           const kinesisMsg = {
-            StreamName: configWithRoleArn.streamName,
+            StreamName: config.streamName,
             PartitionKey: 'logs',
             Data: JSON.stringify(expected[0])
           };
 
+          assert.equal('test-role', logger.roleArn);
           assert.equal(true, logger.kinesis.putRecord.calledOnce);
           assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
           assert.deepEqual(actual, expected);
@@ -96,8 +88,8 @@ describe('ELKKinesisLogger', () => {
     });
   });
 
-  it('should write a simple log to kinesis (with role)', done => {
-    const logger = new ELKKinesisLogger(configWithRoleArn);
+  it('should write a simple log to kinesis', done => {
+    const logger = new ELKKinesisLogger(config);
 
     logger.open().then(() => {
       logger.log(logMsg);
@@ -117,7 +109,7 @@ describe('ELKKinesisLogger', () => {
           ];
 
           const kinesisMsg = {
-            StreamName: configWithRoleArn.streamName,
+            StreamName: config.streamName,
             PartitionKey: 'logs',
             Data: JSON.stringify(expected[0])
           };
@@ -132,7 +124,7 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should write a log with extra detail to kinesis', done => {
-    const logger = new ELKKinesisLogger(configWithRoleArn);
+    const logger = new ELKKinesisLogger(config);
 
     logger.open().then(() => {
       const extraDetail = {
@@ -157,7 +149,7 @@ describe('ELKKinesisLogger', () => {
           ];
 
           const kinesisMsg = {
-            StreamName: configWithRoleArn.streamName,
+            StreamName: config.streamName,
             PartitionKey: 'logs',
             Data: JSON.stringify(expected[0])
           };
@@ -173,7 +165,7 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should write multiple logs', done => {
-    const logger = new ELKKinesisLogger(configWithRoleArn);
+    const logger = new ELKKinesisLogger(config);
 
     logger.open().then(() => {
       logger.log('first message');
@@ -222,7 +214,7 @@ describe('ELKKinesisLogger', () => {
           expected
             .map(ex => {
               return {
-                StreamName: configWithRoleArn.streamName,
+                StreamName: config.streamName,
                 PartitionKey: 'logs',
                 Data: JSON.stringify(ex)
               };
@@ -244,7 +236,7 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should write logs of multiple levels', done => {
-    const logger = new ELKKinesisLogger(configWithRoleArn);
+    const logger = new ELKKinesisLogger(config);
 
     logger.open().then(() => {
       logger.log('first message');
@@ -293,7 +285,7 @@ describe('ELKKinesisLogger', () => {
           expected
             .map(ex => {
               return {
-                StreamName: configWithRoleArn.streamName,
+                StreamName: config.streamName,
                 PartitionKey: 'logs',
                 Data: JSON.stringify(ex)
               };

@@ -1,13 +1,17 @@
 const AWS = require('aws-sdk');
 
 class ELKKinesisLogger {
-  constructor({ stage, stack, app, roleArn, streamName, verbose = true }) {
+  constructor({ stage, stack, app, streamName, verbose = true }) {
     this.stage = stage;
     this.stack = stack;
     this.app = app;
-    this.roleArn = roleArn;
     this.streamName = streamName;
     this.verbose = verbose;
+  }
+
+  withRole(roleArn) {
+    this.roleArn = roleArn;
+    return this;
   }
 
   get _name() {
