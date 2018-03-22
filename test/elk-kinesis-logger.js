@@ -8,7 +8,6 @@ describe('ELKKinesisLogger', () => {
     stage: 'TEST',
     stack: 'elk-kinesis-logger',
     app: 'elk-kinesis-logger-tests',
-    roleArn: 'test-role',
     streamName: 'test-stream',
     verbose: false
   };
@@ -51,6 +50,42 @@ describe('ELKKinesisLogger', () => {
         'ELKKinesisLogger has not been opened. Be sure to call .open() first.'
       );
     }
+  });
+
+  it('should write a simple log to kinesis (with role)', done => {
+    const logger = new ELKKinesisLogger(config).withRole('test-role');
+
+    logger.open().then(() => {
+      logger.log(logMsg);
+
+      logger
+        .close()
+        .then(actual => {
+          const expected = [
+            {
+              stack: 'elk-kinesis-logger',
+              stage: 'TEST',
+              app: 'elk-kinesis-logger-tests',
+              timestamp: date,
+              level: 'INFO',
+              message: logMsg
+            }
+          ];
+
+          const kinesisMsg = {
+            StreamName: config.streamName,
+            PartitionKey: 'logs',
+            Data: JSON.stringify(expected[0])
+          };
+
+          assert.equal('test-role', logger.roleArn);
+          assert.equal(true, logger.kinesis.putRecord.calledOnce);
+          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
+          assert.deepEqual(actual, expected);
+          done();
+        })
+        .catch(err => done(new Error(err)));
+    });
   });
 
   it('should write a simple log to kinesis', done => {
