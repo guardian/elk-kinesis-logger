@@ -7,10 +7,44 @@ class ELKKinesisLogger {
     this.app = app;
     this.streamName = streamName;
     this.verbose = verbose;
+    this.region = 'eu-west-1';
+
+    this.providerChain = [
+      () => {
+        return AWS.ECSCredentials.prototype.isConfiguredForEcsCredentials()
+          ? new AWS.ECSCredentials()
+          : new AWS.EC2MetadataCredentials();
+      },
+      () => new AWS.EnvironmentCredentials('AWS')
+    ];
   }
 
   withRole(roleArn) {
     this.roleArn = roleArn;
+
+    this.providerChain.unshift(
+      () =>
+        new AWS.TemporaryCredentials({
+          RoleArn: this.roleArn,
+          RoleSessionName: this.app
+        })
+    );
+
+    return this;
+  }
+
+  withProfile(profile) {
+    this.profile = profile;
+
+    this.providerChain.unshift(
+      () => new AWS.SharedIniFileCredentials({ profile: this.profile })
+    );
+
+    return this;
+  }
+
+  withRegion(region) {
+    this.region = region;
     return this;
   }
 
@@ -18,37 +52,17 @@ class ELKKinesisLogger {
     return this.constructor.name;
   }
 
-  _openWithoutRole() {
-    return Promise.resolve(new AWS.Kinesis());
-  }
-
-  _openWithRole() {
-    const sts = new AWS.STS();
-
-    const options = {
-      RoleArn: this.roleArn,
-      RoleSessionName: this.app
-    };
-
-    return sts.assumeRole(options).promise().then(data => {
-      return new AWS.Kinesis({
-        accessKeyId: data.Credentials.AccessKeyId,
-        secretAccessKey: data.Credentials.SecretAccessKey,
-        sessionToken: data.Credentials.SessionToken
-      });
-    });
-  }
-
   open() {
-    const openPromise = this.roleArn
-      ? this._openWithRole()
-      : this._openWithoutRole();
+    const chain = new AWS.CredentialProviderChain(this.providerChain);
 
-    return openPromise.then(kinesis => {
-      this.kinesis = kinesis;
-      this._logLines = [];
-      return this;
+    this.kinesis = new AWS.Kinesis({
+      credentials: null,
+      credentialProvider: chain,
+      region: this.region
     });
+
+    this._logLines = [];
+    return Promise.resolve(this);
   }
 
   close() {
