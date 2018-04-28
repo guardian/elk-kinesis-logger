@@ -7,16 +7,12 @@ const options = {
   streamName: process.env.STREAM_NAME
 };
 
-const logger = new ELKKinesisLogger(options);
+const logger = new ELKKinesisLogger(options).open();
 
-logger
-  .open()
-  .then(() => {
-    logger.log('oh hello there', { foo: 'bar' });
-    logger.error('something bad happened');
-    return logger.close();
-  })
-  .then(writtenLogs => {
-    // eslint-disable-next-line no-console
-    console.log(writtenLogs);
-  });
+logger.log('oh hello there', { foo: 'bar' });
+logger.error('something bad happened');
+
+logger.close().then(writtenLogs => {
+  // eslint-disable-next-line no-console
+  console.log(writtenLogs);
+});

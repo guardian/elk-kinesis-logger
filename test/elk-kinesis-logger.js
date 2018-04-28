@@ -53,256 +53,225 @@ describe('ELKKinesisLogger', () => {
   });
 
   it('should write a simple log to kinesis (with role)', done => {
-    const logger = new ELKKinesisLogger(config).withRole('test-role');
+    const logger = new ELKKinesisLogger(config).withRole('test-role').open();
 
-    logger.open().then(() => {
-      logger.log(logMsg);
+    logger.log(logMsg);
 
-      logger
-        .close()
-        .then(actual => {
-          const expected = [
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: logMsg
-            }
-          ];
+    logger.close().then(actual => {
+      const expected = [
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: logMsg
+        }
+      ];
 
-          const kinesisMsg = {
-            StreamName: config.streamName,
-            PartitionKey: 'logs',
-            Data: JSON.stringify(expected[0])
-          };
+      const kinesisMsg = {
+        StreamName: config.streamName,
+        PartitionKey: 'logs',
+        Data: JSON.stringify(expected[0])
+      };
 
-          assert.equal('test-role', logger.roleArn);
-          assert.equal(true, logger.kinesis.putRecord.calledOnce);
-          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
-          assert.deepEqual(actual, expected);
-          done();
-        })
-        .catch(err => done(new Error(err)));
+      assert.equal('test-role', logger.roleArn);
+      assert.equal(true, logger.kinesis.putRecord.calledOnce);
+      assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
+      assert.deepEqual(actual, expected);
+      done();
     });
   });
 
   it('should write a simple log to kinesis', done => {
-    const logger = new ELKKinesisLogger(config);
+    const logger = new ELKKinesisLogger(config).open();
 
-    logger.open().then(() => {
-      logger.log(logMsg);
+    logger.log(logMsg);
 
-      logger
-        .close()
-        .then(actual => {
-          const expected = [
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: logMsg
-            }
-          ];
+    logger.close().then(actual => {
+      const expected = [
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: logMsg
+        }
+      ];
 
-          const kinesisMsg = {
-            StreamName: config.streamName,
-            PartitionKey: 'logs',
-            Data: JSON.stringify(expected[0])
-          };
+      const kinesisMsg = {
+        StreamName: config.streamName,
+        PartitionKey: 'logs',
+        Data: JSON.stringify(expected[0])
+      };
 
-          assert.equal(true, logger.kinesis.putRecord.calledOnce);
-          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
-          assert.deepEqual(actual, expected);
-          done();
-        })
-        .catch(err => done(new Error(err)));
+      assert.equal(true, logger.kinesis.putRecord.calledOnce);
+      assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
+      assert.deepEqual(actual, expected);
+      done();
     });
   });
 
   it('should write a log with extra detail to kinesis', done => {
-    const logger = new ELKKinesisLogger(config);
+    const logger = new ELKKinesisLogger(config).open();
 
-    logger.open().then(() => {
-      const extraDetail = {
-        foo: 'bar'
+    const extraDetail = {
+      foo: 'bar'
+    };
+
+    logger.log(logMsg, extraDetail);
+
+    logger.close().then(actual => {
+      const expected = [
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: logMsg,
+          foo: 'bar'
+        }
+      ];
+
+      const kinesisMsg = {
+        StreamName: config.streamName,
+        PartitionKey: 'logs',
+        Data: JSON.stringify(expected[0])
       };
 
-      logger.log(logMsg, extraDetail);
+      assert.equal(true, logger.kinesis.putRecord.calledOnce);
+      assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
 
-      logger
-        .close()
-        .then(actual => {
-          const expected = [
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: logMsg,
-              foo: 'bar'
-            }
-          ];
-
-          const kinesisMsg = {
-            StreamName: config.streamName,
-            PartitionKey: 'logs',
-            Data: JSON.stringify(expected[0])
-          };
-
-          assert.equal(true, logger.kinesis.putRecord.calledOnce);
-          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
-
-          assert.deepEqual(actual, expected);
-          done();
-        })
-        .catch(err => done(new Error(err)));
+      assert.deepEqual(actual, expected);
+      done();
     });
   });
 
   it('should write multiple logs', done => {
-    const logger = new ELKKinesisLogger(config);
+    const logger = new ELKKinesisLogger(config).open();
 
-    logger.open().then(() => {
-      logger.log('first message');
-      logger.log('second message');
+    logger.log('first message');
+    logger.log('second message');
 
-      logger.log('third message').log('fourth message');
+    logger.log('third message').log('fourth message');
 
-      logger
-        .close()
-        .then(actual => {
-          const expected = [
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: 'first message'
-            },
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: 'second message'
-            },
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: 'third message'
-            },
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: 'fourth message'
-            }
-          ];
+    logger.close().then(actual => {
+      const expected = [
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: 'first message'
+        },
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: 'second message'
+        },
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: 'third message'
+        },
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: 'fourth message'
+        }
+      ];
 
-          expected
-            .map(ex => {
-              return {
-                StreamName: config.streamName,
-                PartitionKey: 'logs',
-                Data: JSON.stringify(ex)
-              };
-            })
-            .forEach(kinesisMsg => {
-              assert.equal(
-                true,
-                logger.kinesis.putRecord.calledWith(kinesisMsg)
-              );
-            });
-
-          assert.equal(true, logger.kinesis.putRecord.callCount === 4);
-
-          assert.deepEqual(actual, expected);
-          done();
+      expected
+        .map(ex => {
+          return {
+            StreamName: config.streamName,
+            PartitionKey: 'logs',
+            Data: JSON.stringify(ex)
+          };
         })
-        .catch(err => done(new Error(err)));
+        .forEach(kinesisMsg => {
+          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
+        });
+
+      assert.equal(true, logger.kinesis.putRecord.callCount === 4);
+
+      assert.deepEqual(actual, expected);
+      done();
     });
   });
 
   it('should write logs of multiple levels', done => {
-    const logger = new ELKKinesisLogger(config);
+    const logger = new ELKKinesisLogger(config).open();
 
-    logger.open().then(() => {
-      logger.log('first message');
-      logger.error('second message');
+    logger.log('first message');
+    logger.error('second message');
 
-      logger.log('third message').error('fourth message');
+    logger.log('third message').error('fourth message');
 
-      logger
-        .close()
-        .then(actual => {
-          const expected = [
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: 'first message'
-            },
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'ERROR',
-              message: 'second message'
-            },
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'INFO',
-              message: 'third message'
-            },
-            {
-              stack: 'elk-kinesis-logger',
-              stage: 'TEST',
-              app: 'elk-kinesis-logger-tests',
-              timestamp: date,
-              level: 'ERROR',
-              message: 'fourth message'
-            }
-          ];
+    logger.close().then(actual => {
+      const expected = [
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: 'first message'
+        },
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'ERROR',
+          message: 'second message'
+        },
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'INFO',
+          message: 'third message'
+        },
+        {
+          stack: 'elk-kinesis-logger',
+          stage: 'TEST',
+          app: 'elk-kinesis-logger-tests',
+          timestamp: date,
+          level: 'ERROR',
+          message: 'fourth message'
+        }
+      ];
 
-          expected
-            .map(ex => {
-              return {
-                StreamName: config.streamName,
-                PartitionKey: 'logs',
-                Data: JSON.stringify(ex)
-              };
-            })
-            .forEach(kinesisMsg => {
-              assert.equal(
-                true,
-                logger.kinesis.putRecord.calledWith(kinesisMsg)
-              );
-            });
-
-          assert.equal(true, logger.kinesis.putRecord.callCount === 4);
-
-          assert.deepEqual(actual, expected);
-          done();
+      expected
+        .map(ex => {
+          return {
+            StreamName: config.streamName,
+            PartitionKey: 'logs',
+            Data: JSON.stringify(ex)
+          };
         })
-        .catch(err => done(new Error(err)));
+        .forEach(kinesisMsg => {
+          assert.equal(true, logger.kinesis.putRecord.calledWith(kinesisMsg));
+        });
+
+      assert.equal(true, logger.kinesis.putRecord.callCount === 4);
+
+      assert.deepEqual(actual, expected);
+      done();
     });
   });
 });

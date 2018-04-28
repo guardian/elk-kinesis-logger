@@ -62,7 +62,7 @@ class ELKKinesisLogger {
     });
 
     this._logLines = [];
-    return Promise.resolve(this);
+    return this;
   }
 
   close() {
