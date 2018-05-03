@@ -1,16 +1,24 @@
 const ELKKinesisLogger = require('../src/elk-kinesis-logger');
 
+const stage = process.env.STAGE || 'DEV';
+const isDev = stage === 'DEV';
+
 const options = {
-  stage: process.env.STAGE,
+  stage: stage,
   stack: process.env.STACK,
   app: 'elk-kinesis-logger',
   streamName: process.env.STREAM_NAME
 };
 
-const logger = new ELKKinesisLogger(options).open();
+const logger = new ELKKinesisLogger(options);
 
-logger.log('oh hello there', { foo: 'bar' });
-logger.error('something bad happened');
+if (isDev) {
+  logger.withProfile(process.env.PROFILE).open();
+} else {
+  logger.withRole(process.env.ROLE_ARN).open();
+}
+
+logger.log('oh hello there');
 
 logger.close().then(writtenLogs => {
   // eslint-disable-next-line no-console
