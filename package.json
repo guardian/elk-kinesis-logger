@@ -12,6 +12,7 @@
   },
   "author": "The Guardian",
   "license": "ISC",
+  "types": "./index.d.ts",
   "devDependencies": {
     "aws-sdk-mock": "^1.6.1",
     "babel-cli": "^6.24.0",
