@@ -5,13 +5,12 @@ on: push
 
 jobs:
   security:
-    uses: guardian/.github/.github/workflows/sbt-node-snyk.yml@main
+    uses: guardian/.github/.github/workflows/sbt-node-snyk.yml@js/npm-install
     with:
       DEBUG: true
       ORG: guardian-test
       SKIP_NODE: false
       NODE_VERSION_FILE: ./.nvmrc
-      
-      
+      NODE_PACKAGE_JSON_FILES_MISSING_LOCK: ./package.json
     secrets:
        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
